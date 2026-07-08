@@ -21,7 +21,6 @@ export const HTMLHeadings = () => {
                 index: number | undefined,
                 parent: Parent | undefined,
               ) => {
-                console.log("HTML NODE FOUND:", node.value)
 
                 if (!parent || index === undefined) return
 
