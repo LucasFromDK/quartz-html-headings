@@ -6,6 +6,9 @@
   "scripts": {
     "build": "tsc"
   },
+  "quartzPlugin": {
+    "type": "transformer"
+  },
   "dependencies": {
     "unist-util-visit": "^5.0.0"
   },
