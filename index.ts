@@ -1,5 +1,3 @@
-console.log("HTML HEADINGS PLUGIN LOADED")
-
 import { visit } from "unist-util-visit"
 import type { Root, HTML, Parent } from "mdast"
 
@@ -19,7 +17,6 @@ export const HTMLHeadings = () => {
                 index: number | undefined,
                 parent: Parent | undefined,
               ) => {
-
                 if (!parent || index === undefined) return
 
                 const match = node.value.match(
@@ -30,23 +27,47 @@ export const HTMLHeadings = () => {
 
                 const depth = Number(match[1]) as 1 | 2 | 3 | 4 | 5 | 6
 
-                parent.children[index] = {
-                  type: "heading",
+                const attributes = match[2] ?? ""
+                const text = match[3].replace(/<[^>]*>/g, "").trim()
+
+                const customId = attributes.match(/id="([^"]+)"/)?.[1]
+
+                // Quartz's normal slug format
+                const slug = text
+                  .toLowerCase()
+                  .replace(/[^a-z0-9\s-]/g, "")
+                  .trim()
+                  .replace(/\s+/g, "-")
+
+                const heading = {
+                  type: "heading" as const,
                   depth,
                   data: {
                     hProperties: {
-                      id: node.value.match(/\sid="([^"]+)"/)?.[1],
+                      id: customId,
                     },
                   },
                   children: [
                     {
-                      type: "text",
-                      value: match[2].replace(/<[^>]*>/g, "").trim(),
+                      type: "text" as const,
+                      value: text,
                     },
                   ],
                 }
 
-                console.log(`CONVERTED HTML h${depth}: ${match[2]}`)
+                if (customId && customId !== slug) {
+                  parent.children.splice(
+                    index,
+                    1,
+                    {
+                      type: "html",
+                      value: `<a id="${slug}"></a>`,
+                    },
+                    heading,
+                  )
+                } else {
+                  parent.children[index] = heading
+                }
               },
             )
           }
