@@ -11,8 +11,6 @@ export const HTMLHeadings = () => {
       return [
         () => {
           return (tree: Root) => {
-            console.log("MARKDOWN TREE RUNNING")
-
             visit(
               tree,
               "html",
