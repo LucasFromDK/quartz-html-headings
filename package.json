@@ -1,12 +1,17 @@
 {
   "name": "quartz-html-headings",
+  "version": "1.0.0",
   "type": "module",
-  "main": "index.ts",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
-    "@types/hast": "^3.0.4",
-    "@types/mdast": "^4.0.4"
+    "typescript": "^5.0.0",
+    "@types/mdast": "^4.0.0",
+    "@types/unist": "^3.0.0"
   }
 }
