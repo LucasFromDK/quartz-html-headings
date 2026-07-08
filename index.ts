@@ -33,6 +33,11 @@ export const HTMLHeadings = () => {
                 parent.children[index] = {
                   type: "heading",
                   depth,
+                  data: {
+                    hProperties: {
+                      id: node.value.match(/\sid="([^"]+)"/)?.[1],
+                    },
+                  },
                   children: [
                     {
                       type: "text",
