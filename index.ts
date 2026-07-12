@@ -20,7 +20,7 @@ export const HTMLHeadings = () => {
                 if (!parent || index === undefined) return
 
                 const match = node.value.match(
-                  /^<h([1-6])(?:\s([^>]*))?>(.*?)<\/h\1>$/is,
+                  /<h([1-6])(?:\s([^>]*))?>(.*?)<\/h\1>/is,
                 )
 
                 if (!match) return
