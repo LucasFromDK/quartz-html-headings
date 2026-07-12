@@ -1,57 +1,103 @@
 import { visit } from "unist-util-visit"
-import type { Root } from "hast"
+import type { Root, HTML, Parent } from "mdast"
 
 export const HTMLHeadings = () => {
   return {
     name: "HTML Headings",
 
-    htmlPlugins() {
+    markdownPlugins() {
       return [
         () => {
           return (tree: Root) => {
-            visit(tree, "element", (node: any) => {
-              if (!/^h[1-6]$/.test(node.tagName)) return
+            visit(
+              tree,
+              "html",
+              (
+                node: HTML,
+                index: number | undefined,
+                parent: Parent | undefined,
+              ) => {
+                if (!parent || index === undefined) return
 
-              const text = getText(node)
+                const match = node.value.match(
+                  /<h([1-6])(?:\s([^>]*))?>(.*?)<\/h\1>/is,
+                )
 
-              const slug = text
-                .toLowerCase()
-                .replace(/[^a-z0-9\s-]/g, "")
-                .trim()
-                .replace(/\s+/g, "-")
+                if (!match) return
 
-              const customId =
-                typeof node.properties?.id === "string"
-                  ? node.properties.id
-                  : undefined
+                const depth = Number(match[1]) as
+                  | 1
+                  | 2
+                  | 3
+                  | 4
+                  | 5
+                  | 6
 
-              // Keep user supplied IDs
-              if (customId) {
-                node.properties.id = customId
-              } else {
-                node.properties.id = slug
-              }
-            })
+                const attributes = match[2] ?? ""
+
+                const text = match[3]
+                  .replace(/<[^>]*>/g, "")
+                  .trim()
+
+                const customId = attributes.match(
+                  /id=["']([^"']+)["']/,
+                )?.[1]
+
+                const heading = {
+                  type: "heading" as const,
+                  depth,
+                  data: {
+                    hProperties: {
+                      id: customId,
+                    },
+                  },
+                  children: [
+                    {
+                      type: "text" as const,
+                      value: text,
+                    },
+                  ],
+                }
+
+                const before = node.value.slice(
+                  0,
+                  match.index,
+                )
+
+                const after = node.value.slice(
+                  (match.index ?? 0) + match[0].length,
+                )
+
+                const replacement = []
+
+                if (before.trim()) {
+                  replacement.push({
+                    type: "html" as const,
+                    value: before,
+                  })
+                }
+
+                replacement.push(heading)
+
+                if (after.trim()) {
+                  replacement.push({
+                    type: "html" as const,
+                    value: after,
+                  })
+                }
+
+                parent.children.splice(
+                  index,
+                  1,
+                  ...replacement,
+                )
+              },
+            )
           }
         },
       ]
     },
   }
-}
-
-function getText(node: any): string {
-  if (node.type === "text") {
-    return node.value
-  }
-
-  if (!node.children) {
-    return ""
-  }
-
-  return node.children
-    .map(getText)
-    .join("")
-    .trim()
 }
 
 export default HTMLHeadings
