@@ -4,6 +4,7 @@ import type { Root, HTML, Parent } from "mdast"
 export const HTMLHeadings = () => {
   return {
     name: "HTML Headings",
+    priority: "45", // Ranks after ToC pluging (50). This is needed for it to work properly with the ToC plugin.
 
     markdownPlugins() {
       return [
