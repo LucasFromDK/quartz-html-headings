@@ -1,80 +1,57 @@
 import { visit } from "unist-util-visit"
-import type { Root, HTML, Parent } from "mdast"
+import type { Root } from "hast"
 
 export const HTMLHeadings = () => {
   return {
     name: "HTML Headings",
 
-    markdownPlugins() {
+    htmlPlugins() {
       return [
         () => {
           return (tree: Root) => {
-            visit(
-              tree,
-              "html",
-              (
-                node: HTML,
-                index: number | undefined,
-                parent: Parent | undefined,
-              ) => {
-                if (!parent || index === undefined) return
+            visit(tree, "element", (node: any) => {
+              if (!/^h[1-6]$/.test(node.tagName)) return
 
-                const match = node.value.match(
-                  /<h([1-6])(?:\s([^>]*))?>(.*?)<\/h\1>/is,
-                )
+              const text = getText(node)
 
-                if (!match) return
+              const slug = text
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, "")
+                .trim()
+                .replace(/\s+/g, "-")
 
-                const depth = Number(match[1]) as 1 | 2 | 3 | 4 | 5 | 6
+              const customId =
+                typeof node.properties?.id === "string"
+                  ? node.properties.id
+                  : undefined
 
-                const attributes = match[2] ?? ""
-                const text = match[3].replace(/<[^>]*>/g, "").trim()
-
-                const customId = attributes.match(/id="([^"]+)"/)?.[1]
-
-                // Quartz's normal slug format
-                const slug = text
-                  .toLowerCase()
-                  .replace(/[^a-z0-9\s-]/g, "")
-                  .trim()
-                  .replace(/\s+/g, "-")
-
-                const heading = {
-                  type: "heading" as const,
-                  depth,
-                  data: {
-                    hProperties: {
-                      id: customId,
-                    },
-                  },
-                  children: [
-                    {
-                      type: "text" as const,
-                      value: text,
-                    },
-                  ],
-                }
-
-                if (customId && customId !== slug) {
-                  parent.children.splice(
-                    index,
-                    1,
-                    {
-                      type: "html",
-                      value: `<a id="${slug}"></a>`,
-                    },
-                    heading,
-                  )
-                } else {
-                  parent.children[index] = heading
-                }
-              },
-            )
+              // Keep user supplied IDs
+              if (customId) {
+                node.properties.id = customId
+              } else {
+                node.properties.id = slug
+              }
+            })
           }
         },
       ]
     },
   }
+}
+
+function getText(node: any): string {
+  if (node.type === "text") {
+    return node.value
+  }
+
+  if (!node.children) {
+    return ""
+  }
+
+  return node.children
+    .map(getText)
+    .join("")
+    .trim()
 }
 
 export default HTMLHeadings
